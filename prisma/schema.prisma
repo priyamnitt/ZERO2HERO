@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now()) @map("created_at")
+  courses    UserCourse[]
+  @@map("users") // Maps to "users" table in database
+}
+
+model Course {
+  id          Int      @id @default(autoincrement())
+  title       String   @db.VarChar(200)
+  description String?
+  price       Decimal  @db.Decimal(10, 2)  // Changed from Float to Decimal
+  imageUrl    String?  @db.VarChar(255) @map("image_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  users       UserCourse[]
+}
+
+model UserCourse {
+  id            Int      @id @default(autoincrement())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId        Int
+  courseId      Int
+  progress      Int      @default(0)
+  lastAccessed  DateTime @default(now()) @map("last_accessed")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, courseId])
+}
